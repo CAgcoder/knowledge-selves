@@ -1,0 +1,24 @@
+services:
+  knowledge-selves-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: knowledge-selves-agent
+    restart: unless-stopped
+    init: true
+    env_file:
+      - path: ./Python_Agent/.env
+        required: false
+    environment:
+      VAULT_PATH: /app/Obsidian_Vault
+      OBSERVER_BACKEND: polling
+      HF_HOME: /app/Python_Agent/data/huggingface
+      TORCH_HOME: /app/Python_Agent/data/torch
+      XDG_CACHE_HOME: /app/Python_Agent/data/cache
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./Obsidian_Vault:/app/Obsidian_Vault
+      - ./Python_Agent/data:/app/Python_Agent/data
+    working_dir: /app/Python_Agent
+    command: ["python", "main.py"]

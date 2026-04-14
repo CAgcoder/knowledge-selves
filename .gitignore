@@ -1,0 +1,30 @@
+# Environment secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# ChromaDB persistent data
+Python_Agent/data/
+
+# Obsidian Vault (managed separately, not in code repo)
+Obsidian_Vault/01-Inbox/*
+Obsidian_Vault/02-Wiki/*
+Obsidian_Vault/03-Review/*
+Obsidian_Vault/04-Archive/*
+!Obsidian_Vault/**/.gitkeep
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log

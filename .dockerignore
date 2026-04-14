@@ -1,0 +1,16 @@
+.git
+.gitignore
+.DS_Store
+.vscode
+.idea
+
+Obsidian_Vault
+Python_Agent/.env
+Python_Agent/.venv
+Python_Agent/data
+Python_Agent/agent.log
+
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.log
