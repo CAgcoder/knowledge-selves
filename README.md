@@ -26,7 +26,7 @@ Python_Agent/
 
 - macOS (Apple Silicon M3 Pro 推荐) / Linux
 - Python 3.12+
-- LLM API Key（推荐使用 DeepSeek / OpenAI / OpenRouter / SiliconFlow 等 OpenAI-compatible 云 API）
+- LLM API Key（推荐使用 DeepSeek / OpenAI / OpenRouter / SiliconFlow / Gemini 等 OpenAI-compatible 云 API）
 
 ## 快速开始
 
@@ -151,6 +151,12 @@ LLM_PROVIDER=openrouter
 LLM_MODEL=openai/gpt-4o-mini
 LLM_BASE_URL=https://openrouter.ai/api/v1
 LLM_API_KEY=your_key
+
+# Gemini（Google AI Studio / Gemini OpenAI 兼容网关）
+LLM_PROVIDER=gemini
+LLM_MODEL=gemini-2.5-flash
+LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
+LLM_API_KEY=AIza...
 ```
 
 配置完成后，直接启动：
@@ -222,6 +228,11 @@ LLM_PROVIDER=openrouter
 LLM_MODEL=openai/gpt-4o-mini
 LLM_BASE_URL=https://openrouter.ai/api/v1
 
+# Gemini
+LLM_PROVIDER=gemini
+LLM_MODEL=gemini-2.5-flash
+LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
+
 # 本地 Ollama
 LLM_PROVIDER=ollama
 LLM_MODEL=qwen2.5:14b
@@ -233,6 +244,7 @@ LLM_API_KEY=ollama
 
 - 付费 API：OpenAI、DeepSeek 等
 - 免费额度或免费模型通道：取决于平台实时政策，例如部分 OpenRouter 路由
+- Gemini 可以直接复用当前的 `OpenAI SDK + base_url` 调用方式，无需单独改写 client 层
 - 当前实现不是 Anthropic 原生 SDK 适配层，如果要直连 Anthropic 原生接口，需要单独加 provider adapter
 
 ## 长文档处理

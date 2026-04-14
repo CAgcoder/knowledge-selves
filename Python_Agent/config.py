@@ -10,6 +10,34 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 
+PROVIDER_DEFAULTS = {
+    "deepseek": {
+        "model": "deepseek-chat",
+        "base_url": "https://api.deepseek.com/v1",
+    },
+    "openai": {
+        "model": "gpt-4o-mini",
+        "base_url": "https://api.openai.com/v1",
+    },
+    "openrouter": {
+        "model": "openai/gpt-4o-mini",
+        "base_url": "https://openrouter.ai/api/v1",
+    },
+    "siliconflow": {
+        "model": "Qwen/Qwen2.5-72B-Instruct",
+        "base_url": "https://api.siliconflow.cn/v1",
+    },
+    "gemini": {
+        "model": "gemini-2.5-flash",
+        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+    },
+    "ollama": {
+        "model": "qwen2.5:14b",
+        "base_url": "http://localhost:11434/v1",
+    },
+}
+
+
 @dataclass
 class AppConfig:
     # LLM
@@ -56,6 +84,11 @@ class AppConfig:
 def load_config() -> AppConfig:
     """从 .env 文件加载配置，缺失项使用默认值。"""
     load_dotenv()
+    llm_provider = os.getenv("LLM_PROVIDER", "deepseek").lower()
+    provider_defaults = PROVIDER_DEFAULTS.get(
+        llm_provider,
+        PROVIDER_DEFAULTS["deepseek"],
+    )
 
     vault = os.getenv("VAULT_PATH", "../Obsidian_Vault")
     # 如果是相对路径，基于 Python_Agent/ 目录解析
@@ -69,9 +102,9 @@ def load_config() -> AppConfig:
         heartbeat_path = (Path(__file__).parent / heartbeat_path).resolve()
 
     return AppConfig(
-        llm_provider=os.getenv("LLM_PROVIDER", "deepseek"),
-        llm_model=os.getenv("LLM_MODEL", "deepseek-chat"),
-        llm_base_url=os.getenv("LLM_BASE_URL", "https://api.deepseek.com/v1"),
+        llm_provider=llm_provider,
+        llm_model=os.getenv("LLM_MODEL", provider_defaults["model"]),
+        llm_base_url=os.getenv("LLM_BASE_URL", provider_defaults["base_url"]),
         llm_api_key=os.getenv("LLM_API_KEY", ""),
         vault_path=vault_path,
         chromadb_path=chromadb_path,

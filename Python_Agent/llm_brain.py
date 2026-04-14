@@ -37,7 +37,8 @@ class WikiNote(BaseModel):
 def create_llm_client(config: AppConfig) -> instructor.Instructor:
     """
     根据配置创建 instructor-wrapped OpenAI 客户端。
-    当前实现支持 OpenAI-compatible provider，通过 base_url 切换。
+    当前实现支持 OpenAI-compatible provider，通过 base_url 切换，
+    包括 DeepSeek、OpenAI、OpenRouter、SiliconFlow 和 Gemini。
     """
     raw_client = OpenAI(
         api_key=config.llm_api_key,
@@ -124,6 +125,7 @@ def generate_note(
     user_msg = USER_PROMPT.format(content=parsed_content)
 
     logger.info("调用 LLM 生成笔记 (model=%s)", model)
+    # 把稳定的大上下文固定在最前面的 system message，尽量提升前缀缓存命中率。
     return client.chat.completions.create(
         model=model,
         response_model=WikiNote,
@@ -191,6 +193,7 @@ def generate_note_mapreduce(
     )
     user_msg = REDUCE_PROMPT.format(chunks_content=chunks_summary)
 
+    # Reduce 阶段继续保持 system message 在前，避免把稳定上下文放到可变 user 段里。
     return client.chat.completions.create(
         model=model,
         response_model=WikiNote,
