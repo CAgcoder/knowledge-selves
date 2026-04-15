@@ -19,7 +19,7 @@ Obsidian_Vault/raw/image/
 Obsidian_Vault/raw/image/*
 !Obsidian_Vault/raw/image/.gitkeep
 Obsidian_Vault/wiki/*
-Obsidian_Vault/.obsidian/
+Obsidian_Vault/.obsidian/*
 !Obsidian_Vault/wiki/assets/.gitkeep
 !Obsidian_Vault/**/.gitkeep
 
