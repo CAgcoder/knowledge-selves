@@ -1,10 +1,9 @@
 """
 main.py — 守护进程入口
-Watchdog 监听 01-Inbox，自动编排 parse → chunk → memory → llm → write 管道。
+Watchdog 监听 raw/，自动编排 parse → chunk → memory → llm → write 管道。
 """
 
 import logging
-import shutil
 import signal
 import sys
 import threading
@@ -21,7 +20,7 @@ from config import AppConfig, load_config
 from embeddings import BGEM3EmbeddingFunction
 from llm_brain import create_llm_client, generate_note, generate_note_mapreduce
 from memory import WIKI_COLLECTION_NAME, get_related_notes, get_wiki_index, index_wiki_notes
-from parser import SUPPORTED_EXTENSIONS, parse_document
+from parser import SUPPORTED_EXTENSIONS, extract_local_image_embeds, parse_document
 from writer import save_to_obsidian
 
 # ── 日志配置 ────────────────────────────────────────────────────────────
@@ -67,7 +66,7 @@ def heartbeat_loop(
 # ── InboxHandler ────────────────────────────────────────────────────────
 
 class InboxHandler(FileSystemEventHandler):
-    """监听 01-Inbox 文件夹变化，触发文档处理管道。"""
+    """监听 raw/ 文件夹变化，触发文档处理管道。"""
 
     DEBOUNCE_SECONDS = 3  # 等待文件拷贝完成
 
@@ -96,6 +95,9 @@ class InboxHandler(FileSystemEventHandler):
     def _schedule_process(self, file_path: str):
         """防抖：等待文件拷贝完成后再处理。"""
         path = Path(file_path)
+
+        if self.config.raw_image_dir in path.parents:
+            return
 
         # 忽略临时文件和隐藏文件
         if path.name.startswith((".", "~")):
@@ -127,7 +129,7 @@ class InboxHandler(FileSystemEventHandler):
         try:
             # 1. 解析文档
             logger.info("[1/6] 解析文档...")
-            raw_md = parse_document(file_path)
+            raw_md = parse_document(file_path, self.config.assets_dir)
             logger.info("  解析完成，共 %d 字符", len(raw_md))
 
             # 2. 分块（如果需要）
@@ -162,21 +164,14 @@ class InboxHandler(FileSystemEventHandler):
                     model=self.config.llm_model,
                 )
 
-            # 6. 写入 03-Review
-            logger.info("[6/6] 写入笔记...")
-            output_path = save_to_obsidian(note, self.config.review_dir)
-            logger.info("  笔记已保存: %s", output_path.name)
+            image_embeds = extract_local_image_embeds(raw_md)
+            if image_embeds and "## 附图" not in note.content:
+                note.content = note.content.rstrip() + "\n\n## 附图\n\n" + "\n\n".join(image_embeds)
 
-            # 7. 归档原始文件到 04-Archive
-            archive_dest = self.config.archive_dir / file_path.name
-            if archive_dest.exists():
-                stem = file_path.stem
-                suffix = file_path.suffix
-                import datetime
-                ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M%S")
-                archive_dest = self.config.archive_dir / f"{stem}_{ts}{suffix}"
-            shutil.move(str(file_path), str(archive_dest))
-            logger.info("  原始文件已归档: %s", archive_dest.name)
+            # 6. 写入 wiki/
+            logger.info("[6/6] 写入笔记...")
+            output_path = save_to_obsidian(note, self.config.wiki_dir)
+            logger.info("  笔记已保存: %s", output_path.relative_to(self.config.wiki_dir))
 
             logger.info("处理完成: %s → %s", file_path.name, output_path.name)
 
@@ -189,7 +184,7 @@ class InboxHandler(FileSystemEventHandler):
 # ── Wiki 目录监听（增量索引） ──────────────────────────────────────────────
 
 class WikiSyncHandler(FileSystemEventHandler):
-    """监听 02-Wiki 文件夹变化，增量更新 ChromaDB 索引。"""
+    """监听 wiki/ 文件夹变化，增量更新 ChromaDB 索引。"""
 
     DEBOUNCE_SECONDS = 5
 
@@ -244,7 +239,17 @@ def main():
         sys.exit(1)
 
     # 确保所有目录存在
-    for d in [config.inbox_dir, config.wiki_dir, config.review_dir, config.archive_dir]:
+    for d in [
+        config.raw_dir,
+        config.raw_image_dir,
+        config.wiki_dir,
+        config.concepts_dir,
+        config.practices_dir,
+        config.visual_dir,
+        config.queries_dir,
+        config.assets_dir,
+        config.skills_dir,
+    ]:
         d.mkdir(parents=True, exist_ok=True)
     config.heartbeat_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -257,7 +262,7 @@ def main():
         embedding_function=embedding_fn,
     )
 
-    # 3. 首次全量索引 02-Wiki
+    # 3. 首次全量索引 wiki/
     logger.info("首次全量索引 Wiki 笔记...")
     count = index_wiki_notes(config.wiki_dir, collection)
     logger.info("索引完成，共 %d 篇笔记", count)
@@ -268,12 +273,12 @@ def main():
     # 5. 启动 Watchdog Observer
     observer = create_observer(config)
 
-    # 监听 01-Inbox
+    # 监听 raw/
     inbox_handler = InboxHandler(config, collection, llm_client)
-    observer.schedule(inbox_handler, str(config.inbox_dir), recursive=False)
-    logger.info("开始监听 Inbox: %s", config.inbox_dir)
+    observer.schedule(inbox_handler, str(config.raw_dir), recursive=True)
+    logger.info("开始监听 Raw 目录: %s", config.raw_dir)
 
-    # 监听 02-Wiki（增量索引）
+    # 监听 wiki/（增量索引）
     wiki_handler = WikiSyncHandler(config, collection)
     observer.schedule(wiki_handler, str(config.wiki_dir), recursive=True)
     logger.info("开始监听 Wiki 变化: %s", config.wiki_dir)

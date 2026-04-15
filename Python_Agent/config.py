@@ -65,20 +65,40 @@ class AppConfig:
     healthcheck_stale_seconds: int = 120
 
     @property
-    def inbox_dir(self) -> Path:
-        return self.vault_path / "01-Inbox"
+    def raw_dir(self) -> Path:
+        return self.vault_path / "raw"
+
+    @property
+    def raw_image_dir(self) -> Path:
+        return self.raw_dir / "image"
 
     @property
     def wiki_dir(self) -> Path:
-        return self.vault_path / "02-Wiki"
+        return self.vault_path / "wiki"
 
     @property
-    def review_dir(self) -> Path:
-        return self.vault_path / "03-Review"
+    def concepts_dir(self) -> Path:
+        return self.wiki_dir / "concepts"
 
     @property
-    def archive_dir(self) -> Path:
-        return self.vault_path / "04-Archive"
+    def practices_dir(self) -> Path:
+        return self.wiki_dir / "practices"
+
+    @property
+    def visual_dir(self) -> Path:
+        return self.wiki_dir / "visual"
+
+    @property
+    def queries_dir(self) -> Path:
+        return self.wiki_dir / "queries"
+
+    @property
+    def assets_dir(self) -> Path:
+        return self.wiki_dir / "assets"
+
+    @property
+    def skills_dir(self) -> Path:
+        return self.vault_path / "skills"
 
 
 def load_config() -> AppConfig:

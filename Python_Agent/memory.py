@@ -16,7 +16,7 @@ WIKI_COLLECTION_NAME = "wiki_notes"
 
 def get_wiki_index(wiki_dir: Path) -> str:
     """
-    遍历 02-Wiki 下所有 .md 文件，提取文件名和 tags 生成目录树字符串。
+    遍历 wiki/ 下所有 .md 文件，提取相对路径和 tags 生成目录树字符串。
 
     Args:
         wiki_dir: Wiki 目录路径
@@ -32,7 +32,7 @@ def get_wiki_index(wiki_dir: Path) -> str:
 
     entries: list[str] = []
     for md_file in sorted(wiki_dir.rglob("*.md")):
-        name = md_file.stem
+        name = md_file.relative_to(wiki_dir).with_suffix("").as_posix()
         try:
             post = frontmatter.load(str(md_file))
             tags = post.get("tags", [])
@@ -54,7 +54,7 @@ def index_wiki_notes(
     collection: chromadb.Collection,
 ) -> int:
     """
-    全量/增量将 02-Wiki 中的笔记索引到 ChromaDB。
+    全量/增量将 wiki/ 中的笔记索引到 ChromaDB。
     用文件相对路径作为 document ID，支持增量更新。
 
     Args:

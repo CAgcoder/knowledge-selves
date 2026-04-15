@@ -5,7 +5,7 @@ llm_brain.py — LLM 思考与生成层
 """
 
 import logging
-from typing import List
+from typing import List, Literal
 
 import instructor
 from openai import OpenAI
@@ -21,6 +21,9 @@ logger = logging.getLogger(__name__)
 class WikiNote(BaseModel):
     """LLM 生成的结构化 Wiki 笔记。"""
     title: str = Field(description="笔记标题，尽量复用已有知识库中的概念词汇")
+    section: Literal["concepts", "practices", "visual", "queries"] = Field(
+        description="输出分区，只能是 concepts、practices、visual 或 queries 之一"
+    )
     tags: List[str] = Field(description="Obsidian 标签，例如 ['AI/Agent', '论文笔记']")
     content: str = Field(
         description="正文内容，必须使用 [[双链]] 引用已有的相关笔记，"
@@ -60,13 +63,19 @@ SYSTEM_PROMPT = """\
 
 ## 规则
 1. **标题**: 用简洁的概念名或术语命名，尽量复用已有知识库中的词汇。
-2. **标签**: 使用 Obsidian 层级标签格式，例如 `AI/Agent`、`论文笔记`。
-3. **正文**:
+2. **分区**: 根据内容选择最合适的输出目录。
+    - `concepts`: 概念解释、理论综述、术语条目
+    - `practices`: 操作指南、方法论、落地流程
+    - `visual`: 图谱、对照表、时间线、可视化说明
+    - `queries`: 用户查询及其研究结论归档
+3. **标签**: 使用 Obsidian 层级标签格式，例如 `AI/Agent`、`论文笔记`。
+4. **正文**:
    - 使用清晰的 Markdown 格式（标题层级、列表、代码块）。
    - 必须使用 `[[双链]]` 引用已有知识库中相关的笔记。
    - 提取核心概念、关键论点、重要公式或数据。
    - 用自己的语言重新组织，而非简单复制粘贴。
-4. **相关笔记**: 列出与本笔记内容相关的已有笔记标题。
+    - 如果素材里已经存在本地图片嵌入（例如 `![[wiki/assets/...]]`），不要分析图片内容，但可以原样保留到文末的 `## 附图` 部分。
+5. **相关笔记**: 列出与本笔记内容相关的已有笔记标题。
 
 ## 当前知识库目录
 {wiki_index}

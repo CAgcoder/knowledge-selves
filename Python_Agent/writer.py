@@ -23,6 +23,7 @@ _UNSAFE_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 _PATH_TRAVERSAL = re.compile(r"\.\.")
 
 MAX_FILENAME_LENGTH = 200
+VALID_SECTIONS = {"concepts", "practices", "visual", "queries"}
 
 
 def sanitize_filename(name: str) -> str:
@@ -67,18 +68,21 @@ def save_to_obsidian(note: WikiNote, output_dir: Path) -> Path:
 
     Args:
         note: 结构化的笔记对象
-        output_dir: 输出目录路径（通常是 03-Review）
+        output_dir: Wiki 根目录路径（例如 wiki/）
 
     Returns:
         写入的文件路径
     """
     output_dir = Path(output_dir)
+    section = note.section if note.section in VALID_SECTIONS else "concepts"
+    output_dir = output_dir / section
     output_dir.mkdir(parents=True, exist_ok=True)
 
     safe_title = sanitize_filename(note.title)
 
     # 组装 frontmatter
     post = frontmatter.Post(note.content)
+    post["section"] = section
     post["tags"] = note.tags
     post["aliases"] = []
     post["created"] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")

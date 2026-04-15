@@ -15,10 +15,10 @@ Python_Agent/data/
 # Obsidian Vault raw inputs and binary assets
 Obsidian_Vault/raw/*
 !Obsidian_Vault/raw/.gitkeep
-!Obsidian_Vault/raw/image/
+Obsidian_Vault/raw/image/
 Obsidian_Vault/raw/image/*
 !Obsidian_Vault/raw/image/.gitkeep
-Obsidian_Vault/wiki/assets/*
+Obsidian_Vault/wiki/*
 !Obsidian_Vault/wiki/assets/.gitkeep
 !Obsidian_Vault/**/.gitkeep
 
