@@ -12,11 +12,14 @@ build/
 # ChromaDB persistent data
 Python_Agent/data/
 
-# Obsidian Vault (managed separately, not in code repo)
-Obsidian_Vault/01-Inbox/*
-Obsidian_Vault/02-Wiki/*
-Obsidian_Vault/03-Review/*
-Obsidian_Vault/04-Archive/*
+# Obsidian Vault raw inputs and binary assets
+Obsidian_Vault/raw/*
+!Obsidian_Vault/raw/.gitkeep
+!Obsidian_Vault/raw/image/
+Obsidian_Vault/raw/image/*
+!Obsidian_Vault/raw/image/.gitkeep
+Obsidian_Vault/wiki/assets/*
+!Obsidian_Vault/wiki/assets/.gitkeep
 !Obsidian_Vault/**/.gitkeep
 
 # macOS
